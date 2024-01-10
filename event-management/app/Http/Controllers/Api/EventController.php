@@ -4,46 +4,39 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
+use App\Http\Traits\CanLoadRelationships;
 use Illuminate\Http\Request;
 use App\Models\Event;
 
 class EventController extends Controller
 {
+    use CanLoadRelationships;
+
+    private array $relations = ['user', 'attendees', 'attendees.user']; // automatically sends relations to CanLoadRelationships
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         // return EventResource::collection(Event::all()); // only the resource data is sent
-        $query = Event::query();
+        // $relations = ['user', 'attendees', 'attendees.user'];
+        $query = $this->loadRelationships(Event::query());
+        
+        // $query = Event::query();
 
-        $relations = ['user', 'attendees', 'attendees.user'];
-
-        foreach ($relations as $relation) {
-            $query->when(
-                $this->shouldIncludeRelation($relation), 
-                fn($q) => $q->with($relation)
-            );
-        };
+        // THIS IS NOW INSIDE THE CanLoadRelationships Trait
+        // foreach ($relations as $relation) {
+        //     $query->when(
+        //         $this->shouldIncludeRelation($relation), 
+        //         fn($q) => $q->with($relation)
+        //     );
+        // };
 
         return EventResource::collection(
             $query->latest()->paginate()
         );
 
         // return EventResource::collection(Event::with('user')->paginate()); // adds user data to response for each resource
-    }
-
-    protected function shouldIncludeRelation(string $relation): bool 
-    {
-        $include = request()->query('include');
-
-        if (!$include) {
-            return false;
-        }
-
-        $relations = array_map('trim', explode(',', $include));
-
-        return in_array($relation, $relations);
     }
 
     /**
@@ -61,7 +54,7 @@ class EventController extends Controller
             'user_id' => 1
         ]);
 
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -70,7 +63,7 @@ class EventController extends Controller
     public function show(Event $event)
     {
         $event->load('user', 'attendees'); // adds user + attendee data to the single resource response
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -86,7 +79,7 @@ class EventController extends Controller
             ]),
         );
 
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
