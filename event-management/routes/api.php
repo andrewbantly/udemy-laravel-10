@@ -23,4 +23,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('events', EventController::class);
 
-Route::apiResource('events.attendees', AttendeeController::class)->scoped(['attendee' => 'event']);
+Route::apiResource('events.attendees', AttendeeController::class)->scoped()->except(['update']); // when no need for PUT (update) attendee route

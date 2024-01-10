@@ -14,7 +14,9 @@ class EventController extends Controller
      */
     public function index()
     {
-        return EventResource::collection(Event::all());
+        // return EventResource::collection(Event::all()); // only the resource data is sent
+
+        return EventResource::collection(Event::with('user')->paginate()); // adds user data to response for each resource
     }
 
     /**
@@ -40,6 +42,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
+        $event->load('user', 'attendees'); // adds user + attendee data to the single resource response
         return new EventResource($event);
     }
 

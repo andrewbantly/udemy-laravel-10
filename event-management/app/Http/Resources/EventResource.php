@@ -21,6 +21,10 @@ class EventResource extends JsonResource
             'description' => $this->description,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
+            'user' => new UserResource($this->whenLoaded('user')), //allows user data to be sent back as part of the event resource
+            'attendees' => AttendeeResource::collection(
+                $this->whenLoaded('attendees') 
+            ), // sends list of attendees for each event resource
         ];
     }
 }
